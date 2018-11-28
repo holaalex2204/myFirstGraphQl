@@ -1,0 +1,11 @@
+{
+  "name": "myFirstGraphQl",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:holaalex2204/myFirstGraphQl.git",
+  "author": "Alejandro Ortiz <alejandroortiz@generation.org>",
+  "license": "MIT",
+  "dependencies": {
+    "graphql": "^14.0.2"
+  }
+}
