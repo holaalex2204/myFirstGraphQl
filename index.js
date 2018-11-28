@@ -1,43 +1,40 @@
 'use strict';
 
-const { graphql, buildSchema } = require('graphql');
+const { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLInt, GraphQLList, } = require('graphql');
+const express = require('express');
+const graphQLHTTP = require('express-graphql');
+const PORT = 3000;
+const eversince = require('gen-eversince-client');
 
-const schema = buildSchema(`
-# Defines all the things that we can "start" with
-# Describes what is possibly, and perhaps more importantly what's not possible
-type Query {
-  foo: RecruitmentProcess
-}
-type RecruitmentProcess {
-  numberApplicants: Int,
-  name: String
-}
-type Schema {
-  query: Query
-}
-`);
 
-const resolvers = {
-  RecruitmentProcess_numberApplicants: () => 10,
-  RecruitmentProcess_name: () => 'Work@LaMaquinista',
-};
+const eventType = require('./eversince/type/eventType');
 
-const query = `{ 
-  foo {
-    name
+eversince.setUrl('https://543i3cqo3a.execute-api.us-east-1.amazonaws.com/staging');
+eversince.setAuthKey('7WGzn4Xm4N8J6r5uSi8kL7oY0taWPmhnavn7zfaW');
+const server = express();
+
+const queryType = new GraphQLObjectType(
+  {
+    name: 'QueryType',
+    fields: {
+      recentEvents: {
+        type: new GraphQLList(eventType),
+        resolve: async () => {
+          let result = (await eversince.getEvents({}));
+          return result.data;
+        }
+      }
+    }
   }
-}`;
+);
+const schema =  new GraphQLSchema({
+  query: queryType,
+})
 
-/**
- * graphql(
- *   schema: GraphQLSchema,
- *   requestString: string,
- *   rootValue?: ?any, passed as root value to the executor
- *   contextValue?: ?any,
- *   variableValues?: ?{[key: string]: any},
- *   operationName?: ?string
- * ): Promise<GraphQLResult>
- */
-graphql(schema, query, resolvers)
-  .then((result) => console.log(result))
-  .catch((error) => console.log(error));
+server.use('/graphQL',graphQLHTTP({
+  schema,
+  graphiql: true,
+}))
+server.listen(PORT,() => {
+  console.log('Listening on port 3000')
+})
